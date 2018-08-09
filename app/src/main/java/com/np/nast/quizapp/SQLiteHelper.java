@@ -5,8 +5,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.np.nast.quizapp.Question;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +13,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     static String DATABASE_NAME = "SubjectDataBase";
 
     public static final String TABLE_NAME = "quiz";
+    public static final String TABLE_NAME_GK = "gk";
 
     public static final String Table_Column_ID = "id";
 
@@ -75,30 +74,4 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         }
         return questionList;
     }
-
-    public List<Question> getAllQuestions() {
-        List<Question> questionList = new ArrayList<Question>();
-
-        dbase = this.getReadableDatabase();
-        String selectQuery = "SELECT * FROM " + TABLE_NAME;
-        Cursor cursor = dbase.rawQuery(selectQuery, null);
-        rowCount = cursor.getCount();
-
-        if (cursor.moveToFirst()) {
-            do {
-                Question q = new Question();
-                q.setId(cursor.getInt(0));
-                q.setQuestion(cursor.getString(1));
-                q.setAnswer(cursor.getString(2));
-                q.setOptA(cursor.getString(3));
-                q.setOptB(cursor.getString(4));
-                q.setOptC(cursor.getString(5));
-
-                questionList.add(q);
-
-            } while (cursor.moveToNext());
-        }
-        return questionList;
-    }
-
 }

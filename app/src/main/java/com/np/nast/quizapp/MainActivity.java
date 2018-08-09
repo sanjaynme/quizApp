@@ -7,14 +7,20 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,18 +28,19 @@ public class MainActivity extends AppCompatActivity {
 
     Button SaveButtonInSQLite, ShowSQLiteDataInListView;
 
-    String HttpJSonURL = "http://192.168.1.144/sync/quiz.php";
+    String HttpJSonURL = "http://192.168.15.120/sync/quiz.php";
 
     ProgressDialog progressDialog;
+    private String sQLiteDataBaseQueryHolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        SaveButtonInSQLite = (Button) findViewById(R.id.button);
+        SaveButtonInSQLite = findViewById(R.id.button);
 
-        ShowSQLiteDataInListView = (Button) findViewById(R.id.button2);
+        ShowSQLiteDataInListView = findViewById(R.id.button2);
 
         SaveButtonInSQLite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -45,8 +52,26 @@ public class MainActivity extends AppCompatActivity {
 
                 DeletePreviousData();
 
-                new StoreJSonDataInToSQLiteClass(MainActivity.this).execute();
+                ApiService.getServiceClass().getAllPost().enqueue(new Callback<List<ApiObject>>() {
+                    @Override
+                    public void onResponse(Call<List<ApiObject>> call, Response<List<ApiObject>> response) {
+                        if (response.isSuccessful()) {
+                            for (int i = 0; i < response.body().size(); i++) {
+                                sQLiteDataBaseQueryHolder = "INSERT INTO " + SQLiteHelper.TABLE_NAME + " (" +
+                                        "question,opta,optb,optc,answer) VALUES('" +
+                                        response.body().get(i).getQuestion() + "', '" + response.body().get(i).getOpta()
+                                        + "', '" + response.body().get(i).getOptb() + "', '" + response.body().get(i).getOptc() + "', '" + response.body().get(i).getAnswer() + "');";
 
+                                sqLiteDatabase.execSQL(sQLiteDataBaseQueryHolder);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<ApiObject>> call, Throwable t) {
+                        Log.d("", "Error msg is :::" + t.getMessage());
+                    }
+                });
             }
         });
 
@@ -163,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
     public void SQLiteTableBuild() {
 
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + SQLiteHelper.TABLE_NAME + "(" + SQLiteHelper.Table_Column_ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " + SQLiteHelper.Table_Column_1_question + " VARCHAR, " + SQLiteHelper.Table_Column_2_opta + " VARCHAR, " + SQLiteHelper.Table_Column_3_optb + " VARCHAR, " + SQLiteHelper.Table_Column_4_optc + " VARCHAR, " + SQLiteHelper.Table_Column_5_answer + " VARCHAR)");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + SQLiteHelper.TABLE_NAME_GK + "(" + SQLiteHelper.Table_Column_ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " + SQLiteHelper.Table_Column_1_question + " VARCHAR, " + SQLiteHelper.Table_Column_2_opta + " VARCHAR, " + SQLiteHelper.Table_Column_3_optb + " VARCHAR, " + SQLiteHelper.Table_Column_4_optc + " VARCHAR, " + SQLiteHelper.Table_Column_5_answer + " VARCHAR)");
 
     }
 
